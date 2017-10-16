@@ -263,7 +263,6 @@ _Use_decl_annotations_ NTSTATUS DriverEntry(PDRIVER_OBJECT driver_object,
 	if (NT_SUCCESS(nt_status)){
 		g_basic_access.init();
 	}
-
 	return nt_status;
 }
 
