@@ -10,9 +10,7 @@
 #include <iostream>
 #include <string>
 
-
 using namespace std;
-
 
 namespace check_windows_support {
 	
@@ -70,7 +68,6 @@ namespace check_windows_support {
 		return b_res;
 	}
 } // namespace check_windows_support
-
 
 void print_hello() {
 	cout << endl;

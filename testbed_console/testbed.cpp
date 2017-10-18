@@ -8,20 +8,19 @@ namespace resource_functions
 		LPVOID  data;
 	}RESOURCE, *PRESOURCE;
 
-	bool extract(RESOURCE & resourse, LPCTSTR lpName, LPCTSTR lpType)
-	{
+	bool extract(RESOURCE & resourse, LPCTSTR lpName, LPCTSTR lpType) {
 		HRSRC   res_handle = NULL;
-		HGLOBAL data_handle = NULL;
 		if ((NULL != (res_handle = FindResource(NULL, lpName, lpType))) &&
-			(0 != (resourse.data_sz = SizeofResource(NULL, res_handle))) &&
-			(NULL != (data_handle = LoadResource(NULL, res_handle)))) {
+			(0 != (resourse.data_sz = SizeofResource(NULL, res_handle)))) {
+			HGLOBAL data_handle = NULL;
+			if (NULL != (data_handle = LoadResource(NULL, res_handle))) {
 			resourse.data = LockResource(data_handle);
+			}
 		}
 		return (NULL != resourse.data);
 	}
 
-	bool get_tmp_file(LPCTSTR lpPrefixString, LPTSTR lpTempFileName)
-	{
+	bool get_tmp_file(LPCTSTR lpPrefixString, LPTSTR lpTempFileName) {
 		auto b_res = false;
 		const DWORD uUnique = 0;
 		wchar_t tmp_path[MAX_PATH] = { 0 };
