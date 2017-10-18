@@ -4,7 +4,7 @@
 #include "wchar.h"
 #include <tchar.h>
 #include <locale.h> // LC_ALL
-#include "testbed_console.h"
+#include "testbed.h"
 #include "stdio.h"
 
 #include <iostream>
@@ -40,7 +40,7 @@ namespace check_windows_support {
 		cout << " ServicePackMinor : " << std::dec << os_version.wServicePackMinor << std::hex << " (0x" << os_version.wServicePackMinor << ")" << endl;
 	}
 
-	bool this_os_is_supported() {
+	bool is_ok() {
 		OSVERSIONINFOEX os_info_needed = { 0 };
 		set_minimal_os_info(os_info_needed);
 
@@ -51,7 +51,7 @@ namespace check_windows_support {
 		VER_SET_CONDITION(dwlConditionMask, VER_SERVICEPACKMAJOR, VER_EQUAL);
 		VER_SET_CONDITION(dwlConditionMask, VER_SERVICEPACKMINOR, VER_EQUAL);
 
-		bool b_res = (0 != VerifyVersionInfo(&os_info_needed,
+		auto b_res = (0 != VerifyVersionInfo(&os_info_needed,
 			VER_MAJORVERSION | VER_MINORVERSION | VER_BUILDNUMBER | 
 			VER_SERVICEPACKMAJOR | VER_SERVICEPACKMINOR, dwlConditionMask));
 
@@ -86,34 +86,36 @@ int wmain(int argc, wchar_t *argv[], wchar_t *envp[])
 	argc; argv; envp; // to avoid warning C4100
 	setlocale(LC_ALL, "");
 	setvbuf(stdout, NULL, _IONBF, 0);
-	if (check_windows_support::this_os_is_supported() && testbed_console::activate_testbed())
+	if (check_windows_support::is_ok())
 	{
-		char command = 0;
-		int bufsz = 0;
-		int target_pid = 0;
-		do {
-			print_hello();
-			command = 0; cin >> std::hex >> command;
-			switch (command)
-			{
-			case 'b':
-				send_ctl_codes::run_basic_mem_access();
-				break;
-			case 's':
-				bufsz = 0; cin >> std::dec >> bufsz;
-				send_ctl_codes::run_simple_stack_overflow(bufsz);
-				break;
-			case 'p':
-				target_pid = 0; cin >> std::dec >> target_pid;
-				send_ctl_codes::run_stack_overflow_with_payload(target_pid);
-				break;
-			default: {};
-					 break;
-			}
-		} while ('q' != command);
+		testbed :: TestBed my_testbed;
+		if (my_testbed.is_ok()) {
+			char command = 0;
+			int bufsz = 0;
+			int target_pid = 0;
+			do {
+				print_hello();
+				command = 0; cin >> std::hex >> command;
+				switch (command)
+				{
+				case 'b':
+					my_testbed.run_basic_mem_access();
+					break;
+				case 's':
+					bufsz = 0; cin >> std::dec >> bufsz;
+					my_testbed.run_simple_stack_overflow(bufsz);
+					break;
+				case 'p':
+					target_pid = 0; cin >> std::dec >> target_pid;
+					my_testbed.run_stack_overflow_with_payload(target_pid);
+					break;
+				default: {};
+						 break;
+				}
+			} while ('q' != command);
+		}
 	}
 	cin.ignore();
 	cout << "Press enter to exit." << endl;
 	cin.ignore(); // std::system("PAUSE");
-
 }

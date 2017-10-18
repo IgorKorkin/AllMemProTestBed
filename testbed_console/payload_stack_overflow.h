@@ -1,12 +1,12 @@
-#ifndef PAYLOAD_STACK_OVERFLOW
-#define PAYLOAD_STACK_OVERFLOW
+#ifndef __PAYLOAD_STACK_OVERFLOW__
+#define __PAYLOAD_STACK_OVERFLOW__
 
 #include <windows.h>
 #include <tlhelp32.h>  // CreateToolhelp32Snapshot
 
 #include "payload_x64.h" // TokenStealingPayloadWin10
 
-#include "iostream" // cout
+#include "iostream" // std::cout
 
 using namespace std;
 
@@ -58,4 +58,4 @@ namespace payload_stack_overflow {
 }
 
 
-#endif // ifndef PAYLOAD_STACK_OVERFLOW
+#endif // ifndef __PAYLOAD_STACK_OVERFLOW__

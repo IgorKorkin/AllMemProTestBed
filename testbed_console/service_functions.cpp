@@ -118,13 +118,21 @@ namespace service_functions
 	}
 
 
-	bool ServiceManager::close_device(HANDLE &hDevice)
-	{
-		bool b_res = false;
+	bool ServiceManager::close_device(HANDLE &hDevice){
+		auto b_res = false;
 		if (hDevice != INVALID_HANDLE_VALUE)
 		{
 			b_res = (CloseHandle(hDevice) != 0) ? true : false;
 			hDevice = INVALID_HANDLE_VALUE;
+		}
+		return b_res;
+	}
+
+	bool ServiceManager::close_device(){
+		auto b_res = false;
+		if (handle_device != INVALID_HANDLE_VALUE){
+			b_res = (CloseHandle(handle_device) != 0) ? true : false;
+			handle_device = INVALID_HANDLE_VALUE;
 		}
 		return b_res;
 	}

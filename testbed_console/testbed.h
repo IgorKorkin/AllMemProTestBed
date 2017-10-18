@@ -1,3 +1,5 @@
+#ifndef __TESTBED_CONSOLE_H__
+#define __TESTBED_CONSOLE_H__
 
 #include "windows.h"
 #include "windef.h"
@@ -9,16 +11,43 @@
 #pragma comment(lib,"shlwapi.lib") // PathFileExists
 
 #include "print_messages.h"
-#include "send_ctl_codes.h"
-#include "..\shared\testbed_shared.h"
+#include "service_functions.h" // ServiceManager
+#include "..\shared\testbed_shared.h" // strings defines
 
+#include "disable_compatibility_window.h" // Disable Program Compatibility Assistant 
 
-namespace testbed_console {
+#include "payload_stack_overflow.h"
 
-	bool activate_testbed();
+namespace testbed{
 
-	void close_stop_remove();
+	class TestBed{
 
+	public:
+		bool is_ok() {
+			return activate_testbed();
+		}
+
+		/* Try ordinary memory access to local, global, and allocated variables */
+		bool run_basic_mem_access();
+
+		/* Run stack overflow without any payload to calculate the required buffer size */
+		bool run_simple_stack_overflow(DWORD bufferSz);
+
+		/* Run stack overflow with the payload to escalate process privileges */
+		bool run_stack_overflow_with_payload(DWORD targetPid);
+
+	private:
+		service_functions::ServiceManager service_manager;
+		
+		/* extract and load driver, deactivate PCA*/
+		bool activate_testbed();
+
+		/* extract driver via resource_functions::RESOURCE */
+		bool extract_driver_file(TCHAR * binFile);
+
+		/* load driver via service_manager */
+		bool load_driver_from_file(TCHAR * binFile);
+	};
 }
 
 extern "C"
@@ -58,3 +87,4 @@ extern "C"
 			);
 
 };
+#endif // __TESTBED_CONSOLE_H__

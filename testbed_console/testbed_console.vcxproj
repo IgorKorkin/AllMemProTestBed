@@ -145,21 +145,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="disable_compatibility_window.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="payload_stack_overflow.cpp" />
     <ClCompile Include="print_messages.cpp" />
-    <ClCompile Include="send_ctl_codes.cpp" />
     <ClCompile Include="service_functions.cpp" />
-    <ClCompile Include="testbed_console.cpp" />
+    <ClCompile Include="testbed.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="disable_compatibility_window.h" />
     <ClInclude Include="payload_stack_overflow.h" />
     <ClInclude Include="payload_x64.h" />
     <ClInclude Include="print_messages.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="send_ctl_codes.h" />
     <ClInclude Include="service_functions.h" />
-    <ClInclude Include="testbed_console.h" />
+    <ClInclude Include="testbed.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="testbed_console.rc">

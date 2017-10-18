@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="testbed_console.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -27,17 +24,17 @@
     <ClCompile Include="print_messages.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="send_ctl_codes.cpp">
+    <ClCompile Include="payload_stack_overflow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="payload_stack_overflow.cpp">
+    <ClCompile Include="disable_compatibility_window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="testbed.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="testbed_console.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="service_functions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -47,13 +44,16 @@
     <ClInclude Include="print_messages.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="send_ctl_codes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="payload_x64.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="payload_stack_overflow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="disable_compatibility_window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="testbed.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

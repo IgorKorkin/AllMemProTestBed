@@ -46,6 +46,8 @@ namespace service_functions
 		}
 
 		bool close_device(HANDLE &hDevice);
+
+		bool close_device();
 		
 		int read(HANDLE hDevice, LPVOID lpBuffer, DWORD nNumberOfBytesToRead);
 		

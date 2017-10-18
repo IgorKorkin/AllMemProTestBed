@@ -210,6 +210,11 @@ _Use_decl_annotations_ bool DriverpIsSuppoetedOS() {
   if (os_version.dwMajorVersion != 6 && os_version.dwMajorVersion != 10) {
     return false;
   }
+
+  if (os_version.dwBuildNumber != 9200){
+	  return false;
+  }
+
   // 4-gigabyte tuning (4GT) should not be enabled
   if (!IsX64() &&
       reinterpret_cast<ULONG_PTR>(MmSystemRangeStart) != 0x80000000) {
@@ -237,6 +242,24 @@ _Use_decl_annotations_ NTSTATUS create_device(IN PDRIVER_OBJECT pDrv, ULONG uFla
 	return status;
 }
 
+#include "intrin.h"
+static const unsigned long SMEP_MASK = 0x100000;
+
+void print_smep_status() {
+	bool b_active = false;
+	KAFFINITY active_processors = KeQueryActiveProcessors();
+	for (KAFFINITY current_affinity = 1; active_processors; current_affinity <<= 1) {
+		if (active_processors & current_affinity) {
+			active_processors &= ~current_affinity;
+			KeSetSystemAffinityThread(current_affinity);
+			b_active = (0 != (__readcr4() & SMEP_MASK));
+			DbgPrint("%s on CPU %d \r\n",
+				b_active ? "SMEP is active" : "SMEP has been disabled",
+				KeGetCurrentProcessorNumber() );
+		}
+	}
+}
+
 // A driver entry point
 _Use_decl_annotations_ NTSTATUS DriverEntry(PDRIVER_OBJECT driver_object,
 	PUNICODE_STRING registry_path) {
@@ -250,6 +273,8 @@ _Use_decl_annotations_ NTSTATUS DriverEntry(PDRIVER_OBJECT driver_object,
 	if (!DriverpIsSuppoetedOS()) {
 		return STATUS_CANCELLED;
 	}
+
+	print_smep_status();
 
 	driver_object->DriverUnload = DriverpDriverUnload;
 	driver_object->MajorFunction[IRP_MJ_CREATE] =
