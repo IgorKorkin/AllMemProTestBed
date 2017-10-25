@@ -10,8 +10,9 @@ namespace print
 		memset(wtmpbuf, 0, sizeof(wtmpbuf));
 
 #ifdef _CONSOLE
-		_vsntprintf_s(wtmpbuf, sz_wtmpbuf-2, _TRUNCATE, fmt, argptr);
-		wcsncat_s(wtmpbuf, sz_wtmpbuf, TEXT("\r\n"), _TRUNCATE);		
+		_vsntprintf_s(wtmpbuf, sz_wtmpbuf - 2, _TRUNCATE, fmt, argptr);
+		wcsncat_s(wtmpbuf, sz_wtmpbuf, TEXT("\r\n"), _TRUNCATE);
+		//OutputDebugString(wtmpbuf);
 		wprintf_s(wtmpbuf);
 		fflush(stdout);
 #else

@@ -18,7 +18,9 @@
 
 #include "payload_stack_overflow.h"
 
-namespace testbed{
+#include "payload_use_after_free.h"
+
+namespace testbed_for_exploitation{
 
 	class TestBed{
 
@@ -35,6 +37,12 @@ namespace testbed{
 
 		/* Run stack overflow with the payload to escalate process privileges */
 		bool run_stack_overflow_with_payload(DWORD targetPid);
+
+		/* Run a simple use-after-free exploit*/
+		bool run_use_after_free();
+
+		/* Run a use-after-free exploit with the payload to escalate process privileges */
+		bool run_use_after_free_with_payload(const DWORD targetPid);
 
 	private:
 		service_functions::ServiceManager service_manager;

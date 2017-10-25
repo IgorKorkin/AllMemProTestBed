@@ -33,6 +33,12 @@
     <ClCompile Include="testbed.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="payload_use_after_free.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="payloads.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="service_functions.h">
@@ -44,9 +50,6 @@
     <ClInclude Include="print_messages.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="payload_x64.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="payload_stack_overflow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -56,15 +59,21 @@
     <ClInclude Include="testbed.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <MASM Include="payload_x64.asm">
-      <Filter>Source Files</Filter>
-    </MASM>
+    <ClInclude Include="payload_use_after_free.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="payloads.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="testbed_console.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="payloads_asm.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
   </ItemGroup>
 </Project>

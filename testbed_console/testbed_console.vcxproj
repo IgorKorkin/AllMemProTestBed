@@ -147,19 +147,22 @@
   <ItemGroup>
     <ClCompile Include="disable_compatibility_window.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="payloads.cpp" />
     <ClCompile Include="payload_stack_overflow.cpp" />
     <ClCompile Include="print_messages.cpp" />
     <ClCompile Include="service_functions.cpp" />
     <ClCompile Include="testbed.cpp" />
+    <ClCompile Include="payload_use_after_free.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="disable_compatibility_window.h" />
     <ClInclude Include="payload_stack_overflow.h" />
-    <ClInclude Include="payload_x64.h" />
+    <ClInclude Include="payloads.h" />
     <ClInclude Include="print_messages.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="service_functions.h" />
     <ClInclude Include="testbed.h" />
+    <ClInclude Include="payload_use_after_free.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="testbed_console.rc">
@@ -169,7 +172,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="payload_x64.asm">
+    <MASM Include="payloads_asm.asm">
       <FileType>Document</FileType>
     </MASM>
   </ItemGroup>

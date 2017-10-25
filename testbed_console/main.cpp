@@ -75,6 +75,8 @@ void print_hello() {
 	cout << " 'b' -- run basic memory accesses " << endl;
 	cout << " 's <BufferSize>' -- stack overflow with <BufferSize>" << endl;
 	cout << " 'p <UniqueProcessId in dec>' -- stack overflow with payload (Privilege Escalation) " << endl;
+	cout << " 'u' -- run simple use after free, which cause a BSOD " << endl;
+	cout << " 'f' -- run use after free with fake object and payload " << endl;
 	cout << " 'q' -- quit this app " << endl;
 }
 
@@ -83,10 +85,12 @@ int wmain(int argc, wchar_t *argv[], wchar_t *envp[])
 	argc; argv; envp; // to avoid warning C4100
 	setlocale(LC_ALL, "");
 	setvbuf(stdout, NULL, _IONBF, 0);
-	if (check_windows_support::is_ok())
+
+	if (check_windows_support::is_ok()) 
 	{
-		testbed :: TestBed my_testbed;
-		if (my_testbed.is_ok()) {
+		testbed_for_exploitation :: TestBed my_testbed;
+		if (my_testbed.is_ok())
+		{
 			char command = 0;
 			int bufsz = 0;
 			int target_pid = 0;
@@ -105,6 +109,13 @@ int wmain(int argc, wchar_t *argv[], wchar_t *envp[])
 				case 'p':
 					target_pid = 0; cin >> std::dec >> target_pid;
 					my_testbed.run_stack_overflow_with_payload(target_pid);
+					break;
+				case 'u':
+					my_testbed.run_use_after_free();
+					break;
+				case 'f':
+					target_pid = 0; cin >> std::dec >> target_pid;
+					my_testbed.run_use_after_free_with_payload(target_pid);
 					break;
 				default: {};
 						 break;
