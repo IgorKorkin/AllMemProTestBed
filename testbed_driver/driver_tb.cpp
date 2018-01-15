@@ -166,6 +166,12 @@ _Use_decl_annotations_ static NTSTATUS DriverpDeviceControl(IN PDEVICE_OBJECT pD
 	UNREFERENCED_PARAMETER(pDeviceObject);
 	PAGED_CODE();
 
+	ULONG_PTR LowLimit = { 0 };
+	ULONG_PTR HighLimit = { 0 };
+	IoGetStackLimits(&LowLimit, &HighLimit);
+	DbgPrint("Stack limits [DriverpDeviceControl] %I64X-%I64X \r\n",
+		LowLimit, HighLimit);
+
 	const auto stack = IoGetCurrentIrpStackLocation(pIrp);
 	PVOID in_buf = NULL, out_buf = NULL;
 	ULONG in_buf_sz = 0, out_buf_sz = 0;
@@ -182,9 +188,8 @@ _Use_decl_annotations_ static NTSTATUS DriverpDeviceControl(IN PDEVICE_OBJECT pD
 			status = vulnerable_code::stack_overflow_stub(in_buf, in_buf_sz);
 			info = in_buf_sz;
 			break;
-		case TESTBED_STACK_OVERFLOW_FROM_HEVD:
-			/* Wrong function call, because we need a second function-stub, which will be called by TriggerStackOverflow() */
-			status = vulnerable_code::TriggerStackOverflow(in_buf, in_buf_sz);
+		case TESTBED_SIMPLE_POOL_OVERFLOW:
+			status = vulnerable_code::pool_overflow_stub(in_buf, in_buf_sz);
 			info = in_buf_sz;
 			break;
 		case TESTBED_UAF_ALLOCATE_OBJECT:
@@ -202,6 +207,12 @@ _Use_decl_annotations_ static NTSTATUS DriverpDeviceControl(IN PDEVICE_OBJECT pD
 		case TESTBED_UAF_ALLOCATE_FAKE:
 			status = vulnerable_code::uaf_allocate_fake_stub(in_buf);
 			info = in_buf_sz;
+			break;
+		case TESTBED_START_SET_THREAD:
+			status = g_basic_access.start_set_thread(in_buf, out_buf);
+			break;
+		case TESTBED_STOP_THREAD:
+			status = g_basic_access.stop_thread();
 			break;
 		default: {}
 	}
@@ -280,12 +291,22 @@ _Use_decl_annotations_ NTSTATUS DriverEntry(PDRIVER_OBJECT driver_object,
 	PAGED_CODE();
 	
 	DbgPrint("********************************* \r\n");
-	DbgPrint("The driver [%ws] has been loaded! \r\n\r\n\r\n", TESTBED_SYS_FILE);
+	DbgPrint("The driver [%ws] has been loaded to %I64X-%I64X \r\n", 
+		driver_object->DriverName.Buffer,
+		driver_object->DriverStart, (char*)driver_object->DriverStart+ driver_object->DriverSize);
+	
+	ULONG_PTR LowLimit = { 0 };
+	ULONG_PTR HighLimit = { 0 }; 
+	IoGetStackLimits(&LowLimit, &HighLimit);
+	DbgPrint("Stack limits [%s] %I64X-%I64X \r\n", 
+		__FUNCTION__, LowLimit, HighLimit);
+
+	DbgPrint("\r\n********************************* \r\n");
 
 	// Test if the system is supported
-	if (!DriverpIsSuppoetedOS()) {
-		return STATUS_CANCELLED;
-	}
+// 	if (!DriverpIsSuppoetedOS()) {
+// 		return STATUS_CANCELLED;
+// 	}
 
 	print_smep_status();
 

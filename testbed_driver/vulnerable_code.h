@@ -11,22 +11,6 @@ namespace vulnerable_code {
 	/* Run vulnerable function with memcpy() */
 	NTSTATUS run_stack_overflow(IN PVOID UserBuffer, IN SIZE_T Size);
 
-	/// <summary>
-	/// Trigger the Stack Overflow Vulnerability
-	/// </summary>
-	/// <param name="UserBuffer">The pointer to user mode buffer</param>
-	/// <param name="Size">Size of the user mode buffer</param>
-	/// <returns>NTSTATUS</returns>
-	NTSTATUS TriggerStackOverflow(IN PVOID UserBuffer, IN SIZE_T Size);
-
-	/************************************************************************/
-	/*                                                                      */
-	/************************************************************************/
-
-
-
-	
-
 	const int g_ObjectTag = 'sTyM';
 
 	const int g_Objectsz = 0x54;
@@ -44,4 +28,10 @@ namespace vulnerable_code {
 	NTSTATUS uaf_free_object_stub();
 	NTSTATUS uaf_use_object_stub();
 	NTSTATUS uaf_allocate_fake_stub(void* userBuf);
+
+	/* Vulnerable function with pool overflow */
+	NTSTATUS pool_overflow_stub(IN PVOID UserBuffer, IN SIZE_T Size);
+
+	NTSTATUS run_pool_overflow(IN PVOID UserBuffer, IN SIZE_T Size);
+
 }

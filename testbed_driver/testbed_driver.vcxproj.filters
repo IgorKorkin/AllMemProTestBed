@@ -24,13 +24,13 @@
     </Inf>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="driver.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="basic_mem_access.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vulnerable_code.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="driver_tb.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -50,5 +50,10 @@
     <ClInclude Include="vulnerable_code.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="code_asm.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
   </ItemGroup>
 </Project>

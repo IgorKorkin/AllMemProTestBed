@@ -67,6 +67,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -109,6 +110,7 @@
       <WppKernelMode>true</WppKernelMode>
       <WarningLevel>Level4</WarningLevel>
       <BufferSecurityCheck>false</BufferSecurityCheck>
+      <ControlFlowGuard>false</ControlFlowGuard>
     </ClCompile>
     <Link />
   </ItemDefinitionGroup>
@@ -125,7 +127,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="basic_mem_access.cpp" />
-    <ClCompile Include="driver.cpp" />
+    <ClCompile Include="driver_tb.cpp" />
     <ClCompile Include="vulnerable_code.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -135,7 +137,11 @@
     <ClInclude Include="driver.h" />
     <ClInclude Include="vulnerable_code.h" />
   </ItemGroup>
+  <ItemGroup>
+    <MASM Include="code_asm.asm" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
   </ImportGroup>
 </Project>
